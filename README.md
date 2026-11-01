@@ -51,6 +51,17 @@ Initial calculations (before the Simulink design) had shown that we would need t
 
 That is why the board carries the ADXL375 alongside the BNO086. With the accuracy from the BNO086 and the high-g sensing from the ADXL375 creates a way to have consistent telemetry from beginning to end.
 
+This is true acceleration:
+<img width="2559" height="1324" alt="image" src="https://github.com/user-attachments/assets/36ff1f59-fc55-45ce-9c1c-973088791371" />
+
+This is what the ADXL375 sensor sees:
+<img width="2559" height="1323" alt="image" src="https://github.com/user-attachments/assets/dcf82450-7a58-49ed-8220-556687a0f0c9" />
+
+Lastly, this is what the BNO086 sensor sees:
+<img width="2557" height="1324" alt="image" src="https://github.com/user-attachments/assets/40732956-3dfa-4c29-bb37-38551fb60f92" />
+
+From the graphs (disregarding the offset/bias), the BNO086 has lesser noise than the ADXL375 but saturates at high peaks. Therefore both sensors are needed for a full measurement.
+
 ## Flight Simulation (Simulink)
 
 The model keeps physics, sensors, and flight software strictly separate. The flight computer logic only ever sees sensor outputs and never the true state. Meaning the simulation only uses the same information the board should have.
@@ -102,6 +113,29 @@ flowchart LR
   + Timeout: Either check has held for 1 s by itself.
   + Backup Timer: A fixed time after burnout that is independent of the barometer.
 + The Kalman filter fuses the barometer altitude with the accelerometer data to estimate altitude and velocity. Velocity noise is about ±0.25 m/s which is roughly 10x better than differentiating the barometer directly.
+
+The Kalman filter significantly improves the measurement reliability of height and velocity.
+Height:
+<img width="2559" height="1326" alt="image" src="https://github.com/user-attachments/assets/fd442356-8e0a-48e7-a439-0cc652ac499e" />
+
+Velocity:
+<img width="2559" height="1324" alt="image" src="https://github.com/user-attachments/assets/18770750-a6fc-4fcf-92d6-15c525801ddc" />
+
+Velocity is measured by integrating acceleration so there are issues that the Kalman filter catches such as during landing, acceleration is at a constant 9.81 but velocity should be zero
+<img width="2559" height="1320" alt="image" src="https://github.com/user-attachments/assets/9a693b1a-255c-42e9-b438-bdd55d26685a" />
+
+There is still issues with the Kalman filter. For example, there is a wind up issue at the beginning due to how h_avgStart is measured so there is a wind up at the beginning before the filter is actually accurate.
+Height:
+<img width="2559" height="1321" alt="image" src="https://github.com/user-attachments/assets/c7414acb-9e86-410f-b0ff-ac1ef6dacd1f" />
+
+Velocity:
+<img width="2559" height="1323" alt="image" src="https://github.com/user-attachments/assets/46ca6edd-41a3-464b-a293-3c69cfed24be" />
+
+Regardless, the measurements are more accurate than just using the barometer (brown).
+<img width="2559" height="1324" alt="image" src="https://github.com/user-attachments/assets/cfe8dc81-7c65-46dc-ae33-db14357d876a" />
+
+
+With a combination between the Kalman filter, the IMU, and the high-g accelerometer, we are able to get a reasonably accurate sensor fusion setup for what we need to operate the flight controller.
 
 ## Graphs and Simulation Results
 Tests were conducted with 100 randomized flights. Tests were conducted up to the worse case scenario as per the hardware datasheets.

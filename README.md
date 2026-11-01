@@ -138,7 +138,7 @@ A passing flight passes only if:
 ### Results: 100 / 100 flights passed
 
 + Flight Paths: The Apogee varies from about 535 to 755 m with motor, drag, and mass variation. The drogue (red) fires at the peak every time, and the main (blue) at 300 m.
-<img width="1546" height="1008" alt="02_apogee_timing" src="https://github.com/user-attachments/assets/7d888e10-a8a8-49da-829f-e0c42b57353f" />
+<img width="1563" height="1008" alt="01_flight_paths" src="https://github.com/user-attachments/assets/ea1d7c47-e0d9-4711-bf12-b87959012c1b" />
 + Apogee Timing: The drogue fired 0.10 to 0.53 s after true apogee in every flight. It also triggered only after apogee
 <img width="1546" height="1008" alt="02_apogee_timing" src="https://github.com/user-attachments/assets/7d888e10-a8a8-49da-829f-e0c42b57353f" />
 + Drogue Speed vs Noise: Deployment speed always stays under 5 m/s even at 30x the datasheet barometer noise.

@@ -139,12 +139,16 @@ A passing flight passes only if:
 
 + Flight Paths: The Apogee varies from about 535 to 755 m with motor, drag, and mass variation. The drogue (red) fires at the peak every time, and the main (blue) at 300 m.
 <img width="1563" height="1008" alt="01_flight_paths" src="https://github.com/user-attachments/assets/ea1d7c47-e0d9-4711-bf12-b87959012c1b" />
+
 + Apogee Timing: The drogue fired 0.10 to 0.53 s after true apogee in every flight. It also triggered only after apogee
 <img width="1546" height="1008" alt="02_apogee_timing" src="https://github.com/user-attachments/assets/7d888e10-a8a8-49da-829f-e0c42b57353f" />
+
 + Drogue Speed vs Noise: Deployment speed always stays under 5 m/s even at 30x the datasheet barometer noise.
 <img width="1551" height="1017" alt="03_drogue_speed" src="https://github.com/user-attachments/assets/09aa5d84-653c-409a-8860-4d196216ecb1" />
+
 + Main Altitude: Main deployment lands about 1 to 2 m below 300 m regardless of barometer offset. The pad calibration removes the offset completely so the consistent shortfall from the distance fallen during the 50 ms value hold.
 <img width="1572" height="1008" alt="04_main_altitude" src="https://github.com/user-attachments/assets/cf877a43-e783-4a68-8500-c5b360041d8d" />
+
 + Pad Bumps: Every pad bump up to 40 g and 100 ms was safely rejected. The actual launch  must sustain over 3 g for 250 ms which is a 2.5x margin over the longest bump tested.
 <img width="1546" height="1008" alt="05_pad_bumps" src="https://github.com/user-attachments/assets/ec7098a2-93fc-4c89-b9c9-7f20bdc2044e" />
 

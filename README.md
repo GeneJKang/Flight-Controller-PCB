@@ -3,18 +3,6 @@ This is a Flight Controller PCB designed in KiCad and simulated in Simulink. It 
 
 <img width="1255" height="870" alt="image" src="https://github.com/user-attachments/assets/32492e19-4cbe-4576-beac-fe19ebf62c79" />
 
-
-## Graphs and Simulation Results
-Tests were conducted with 100 randomized flights. Tests were conducted up to the worse case scenario as per the hardware datasheets.
-| Check | Results |
-| --- | --- |
-| How many flights pass | 100 / 100 |
-| Drogue deployment after true apogee | 0.10 to 0.53s |
-| Rocket speed at drogue | under 5 m/s |
-| Main deployment altitude error | 1 to 2 m |
-| Pad Bumps | Up to 40 g for 100 ms |
-| Peak Impulse | 17 g |
-
 ## Hardware
 ```mermaid
 flowchart LR
@@ -114,6 +102,17 @@ flowchart LR
   + Timeout: Either check has held for 1 s by itself.
   + Backup Timer: A fixed time after burnout that is independent of the barometer.
 + The Kalman filter fuses the barometer altitude with the accelerometer data to estimate altitude and velocity. Velocity noise is about ±0.25 m/s which is roughly 10x better than differentiating the barometer directly.
+
+## Graphs and Simulation Results
+Tests were conducted with 100 randomized flights. Tests were conducted up to the worse case scenario as per the hardware datasheets.
+| Check | Results |
+| --- | --- |
+| How many flights pass | 100 / 100 |
+| Drogue deployment after true apogee | 0.10 to 0.53s |
+| Rocket speed at drogue | under 5 m/s |
+| Main deployment altitude error | 1 to 2 m |
+| Pad Bumps | Up to 40 g for 100 ms |
+| Peak Impulse | 17 g |
 
 ### Stress Testing
 

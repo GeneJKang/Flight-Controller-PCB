@@ -60,7 +60,7 @@ This is what the ADXL375 sensor sees:
 Lastly, this is what the BNO086 sensor sees:
 <img width="2557" height="1324" alt="image" src="https://github.com/user-attachments/assets/40732956-3dfa-4c29-bb37-38551fb60f92" />
 
-From the graphs (disregarding the offset/bias), the BNO086 has lesser noise than the ADXL375 but saturates at high peaks. Therefore both sensors are needed for a full measurement.
+From the graphs (disregarding the offset/bias), the BNO086 has lesser noise than the ADXL375 (at some points the ADXL may reach around ±1 g of noise), but the BNO086 saturates at high peaks. Therefore both sensors are needed for a full measurement.
 
 ## Flight Simulation (Simulink)
 
@@ -114,7 +114,10 @@ flowchart LR
   + Backup Timer: A fixed time after burnout that is independent of the barometer.
 + The Kalman filter fuses the barometer altitude with the accelerometer data to estimate altitude and velocity. Velocity noise is about ±0.25 m/s which is roughly 10x better than differentiating the barometer directly.
 
+### Kalman Filter
+
 The Kalman filter significantly improves the measurement reliability of height and velocity.
+
 Height:
 <img width="2559" height="1326" alt="image" src="https://github.com/user-attachments/assets/fd442356-8e0a-48e7-a439-0cc652ac499e" />
 
@@ -125,6 +128,7 @@ Velocity is measured by integrating acceleration so there are issues that the Ka
 <img width="2559" height="1320" alt="image" src="https://github.com/user-attachments/assets/9a693b1a-255c-42e9-b438-bdd55d26685a" />
 
 There is still issues with the Kalman filter. For example, there is a wind up issue at the beginning due to how h_avgStart is measured so there is a wind up at the beginning before the filter is actually accurate.
+
 Height:
 <img width="2559" height="1321" alt="image" src="https://github.com/user-attachments/assets/c7414acb-9e86-410f-b0ff-ac1ef6dacd1f" />
 

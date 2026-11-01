@@ -26,7 +26,7 @@ flowchart LR
 | Microcontroller | STM32F411 | Has enough speed for sensor fusion at 100 Hz and enough memory to hold flight data |
 | Barometer | BMP581 | 0.25 Pa RMS noise at x16 oversampling (~2cm) at up to 80 Hz |
 | IMU | BNO086 | Onboard sensor fusion for orientation and low-noise acceleration when below 8 g |
-| High-g Accelerometer | ADXL375 | ±200 g range covers boost and parachute impulse that saturates the IMU |
+| High-g Accelerometer | ADXL375 | ±200 g range covers boost and parachute acceleration that saturates the IMU |
 | Telemetry | Si4463 | Wireless communication for telemetry and commands |
 | USB Protection | USBLC6 | ESD protection on USB-C data lines |
 | Buck Converter | TPS563201 | Voltage drop down to 4.16 V (Just in case USB-C also plugged in) |
@@ -60,7 +60,7 @@ This is what the ADXL375 sensor sees:
 Lastly, this is what the BNO086 sensor sees:
 <img width="2557" height="1324" alt="image" src="https://github.com/user-attachments/assets/40732956-3dfa-4c29-bb37-38551fb60f92" />
 
-From the graphs (disregarding the offset/bias), the BNO086 has lesser noise than the ADXL375 (at some points the ADXL may reach around ±1 g of noise), but the BNO086 saturates at high peaks. Therefore both sensors are needed for a full measurement.
+From the graphs (disregarding the offset/bias), the BNO086 has lesser noise than the ADXL375 (at some points the ADXL may reach around ±1 m/s<sub>2</sub> of noise), but the BNO086 saturates at high peaks. Therefore both sensors are needed for a full measurement.
 
 ## Flight Simulation (Simulink)
 
@@ -108,13 +108,15 @@ flowchart LR
 ```
 
 + Pad calibration is conducted while on the pad. The flight computer averages the barometer to find ground level and uses that as a reference for the rest of the flight. This cancels the sensor's absolute offset.
-+ There are redundant apogee detection due to misfires during simulation.
++ There are redundant apogee detection in order to avoid misfires that occurred during simulation. All 3 paths also require the rocke to be at least 100 m above the pad, so no parachute can fire on the ground.
   + Normal: The barometer has dropped 1 m below its peak AND thhe Kalman-filtered velocity has turned negative.
   + Timeout: Either check has held for 1 s by itself.
   + Backup Timer: A fixed time after burnout that is independent of the barometer.
 + The Kalman filter fuses the barometer altitude with the accelerometer data to estimate altitude and velocity. Velocity noise is about ±0.25 m/s which is roughly 10x better than differentiating the barometer directly.
 
 ### Kalman Filter
+
+The filter tuned directly from datasheet noise with measurement noise R = (barometer noise in meters)<sup>2</sup> which is around 2 cm<sup>2</sup>, and process noise Q from the BNO086's (0.3 m/s<sup>2</sup>)<sup>2</sup> acceleration variance. It keeps this tuning even when the stress test raises the noise by 30x.
 
 The Kalman filter significantly improves the measurement reliability of height and velocity.
 
@@ -127,7 +129,7 @@ Velocity:
 Velocity is measured by integrating acceleration so there are issues that the Kalman filter catches such as during landing, acceleration is at a constant 9.81 but velocity should be zero
 <img width="2559" height="1320" alt="image" src="https://github.com/user-attachments/assets/9a693b1a-255c-42e9-b438-bdd55d26685a" />
 
-There is still issues with the Kalman filter. For example, there is a wind up issue at the beginning due to how h_avgStart is measured so there is a wind up at the beginning before the filter is actually accurate.
+There is still issues with the Kalman filter. For example, there is a startup transient issue at the beginning due to how h_avgStart is measured so there is a wind up at the beginning before the filter is actually accurate.
 
 Height:
 <img width="2559" height="1321" alt="image" src="https://github.com/user-attachments/assets/c7414acb-9e86-410f-b0ff-ac1ef6dacd1f" />
@@ -142,7 +144,8 @@ Regardless, the measurements are more accurate than just using the barometer (br
 With a combination between the Kalman filter, the IMU, and the high-g accelerometer, we are able to get a reasonably accurate sensor fusion setup for what we need to operate the flight controller.
 
 ## Graphs and Simulation Results
-Tests were conducted with 100 randomized flights. Tests were conducted up to the worse case scenario as per the hardware datasheets.
+Tests were conducted with 100 randomized flights. Tests were conducted up to the datasheet worse cases, and go well beyond them for barometer noise due to how important the barometer is and how much noise is to be expected in the rocket.
+
 | Check | Results |
 | --- | --- |
 | How many flights pass | 100 / 100 |
@@ -150,7 +153,7 @@ Tests were conducted with 100 randomized flights. Tests were conducted up to the
 | Rocket speed at drogue | under 5 m/s |
 | Main deployment altitude error | 1 to 2 m |
 | Pad Bumps | Up to 40 g for 100 ms |
-| Peak Impulse | 17 g |
+| Peak Acceleration | 17 g |
 
 ### Stress Testing
 
@@ -159,6 +162,7 @@ The model was tested 100 times and each flight has different values for every er
 | Randomized Parameter | Range |
 | --- | --- |
 | Barometer Offset | ±75 Pa |
+| Barometer Noise | 1x - 30x datasheet values (airflow and port effects) |
 | BNO086 Bias/Noise | ±0.5 m/s<sup>2</sup> / 1x - 5x |
 | Motor Total Impulse | ±10% |
 | Drag Coefficient | 0.40 - 0.60 |
@@ -191,17 +195,19 @@ A passing flight passes only if:
 
 ### Design changes from the stress test
 
-Originally, all flight states used a 50 ms value check, including the pad flight state. This caused an issue with the flight logic where some flights fired the parachute on the pad from bumps or otherwise. Thus led to a separate 250 ms value check. The initial launch from the pad to the peak acceleration is around 1.8 seconds so the 250 ms check is fine.
+Originally, all flight states used a 50 ms value check, including the pad flight state. This caused an issue with the flight logic where some flights fired the parachute on the pad from bumps or otherwise. Thus led to a separate 250 ms value check. The initial launch from the pad to the end of burn is around 1.8 seconds so the 250 ms check is fine.
 
 The other issue was missing landings due to high barometer noise. A 1 m change tolerance was smaller than the noise spikes at 20 to 30x. So the tolerance was sized to the noise (3 m) with a 2 s value hold.
 
+Lastly, to avoid misfires of the parachute, a 100 m arming altitude was also added to every apogee path as a second layer of protection in the Stateflow system.
+
 ## Limitations
 + 1-DOF: The calculations only work on the second dimension. Meaning theres no window, attitude, or weathercocking.
-+ Instant Breaking: The breaking/parachuting is instant so it takes into account the best case scenario.
++ Instant Braking: The braking/parachuting is instant so it takes into account the best case scenario.
 
 ## Future Steps
 + Implement 2-DOF simulation
-+ Implement delayed breaking
++ Implement delayed braking
 + Signal Integrity Analysis
 
 
